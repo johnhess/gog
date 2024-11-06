@@ -20,8 +20,11 @@ cpr::Response do_binary_request(std::vector<uint8_t> binary_request) {
     std::string body = ohttp::get_body_from_binary_request(binary_request);
     if (method == "POST") {
         return cpr::Post(cpr::Url{url}, cpr::Body{body});
+    } if (method == "GET") {
+        return cpr::Get(cpr::Url{url}, cpr::Body{body});
     } else {
-        throw std::runtime_error("Unsupported HTTP method");
+        // TODO: Handle uknonwn method, or require a known method.
+        return cpr::Response();
     }
 }
 
@@ -58,16 +61,20 @@ crow::SimpleApp& initialize_app(crow::SimpleApp& app, EVP_HPKE_KEY *keypair) {
             /* recipient_keypair */ *keypair
         );
         if (result != ohttp::DecapsulationErrorCode::SUCCESS) {
-            return crow::response{500, "Decapsulation failed"};
+            return crow::response{500, DecapsulationErrorCodeToString(result)};
         }
-        std::cout << "Decapsulated request: " << std::string(decapsulated_request, decapsulated_request + out_len) << std::endl;
         cpr::Response response = do_binary_request(std::vector<uint8_t>(decapsulated_request, decapsulated_request + out_len));
 
-        std::cout << "Response code: " << response.status_code << std::endl;        
-        std::cout << "Response body: " << response.text << std::endl;        
-        // Encapsulate response and return it.
+        // Encapsulate response
+        std::vector<uint8_t> encapsulated_response = ohttp::encapsulate_response(
+            /* receiver_context */ &receiver_context,
+            /* enc */ enc,
+            /* enc_len */ enc_len,
+            /* response_code */ (int)response.status_code,
+            /* response_body */ response.text
+        );
 
-        return crow::response{200, "Request received"};
+        return crow::response{std::string(encapsulated_response.begin(), encapsulated_response.end())};
     });
 
     return app;

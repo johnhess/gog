@@ -41,6 +41,53 @@ TEST(CrowAppTest, OhttpKeysEndpoint_ReturnsNonEmptyResponseWith200Status) {
     
     EXPECT_EQ(response.status_code, 200);
     EXPECT_FALSE(response.text.empty());
+    std::vector<uint8_t> pk = ohttp::get_public_key(std::vector<uint8_t>(response.text.begin(), response.text.end()));
+    EXPECT_EQ(pk.size(), 32);
+}
+
+TEST(CrowAppTest, OhttpGatewayEndpoint_ReturnsNonEmptyResponseWith200Status) {
+    cpr::Response config_resp = cpr::Get(cpr::Url{"http://localhost:8081/ohttp-keys"});
+    std::vector<uint8_t> pk = ohttp::get_public_key(std::vector<uint8_t>(config_resp.text.begin(), config_resp.text.end()));
+
+    // Encapsulate that request
+    EVP_HPKE_CTX sender_context;
+    uint8_t client_enc[EVP_HPKE_MAX_ENC_LENGTH];
+    size_t client_enc_len;
+    std::vector<uint8_t> erequest = ohttp::get_encapsulated_request(
+        &sender_context,
+        // Use information endpoint for our test to keep it self contained.
+        "GET", "https", "httpbin.org", "/status/200", "",
+        client_enc, &client_enc_len,
+        pk.data(), pk.size()
+    );
+    std::string body = std::string(erequest.begin(), erequest.end());
+    // Send request to local gateway
+    cpr::Response response = cpr::Post(
+        cpr::Url{"http://localhost:8081/gateway"},
+        cpr::Body{body}
+    );
+    EXPECT_EQ(response.status_code, 200); // GATEWAY's response, not the target's
+    EXPECT_FALSE(response.text.empty());
+
+    // Decapsulate the response
+    std::vector<uint8_t> eresponse = std::vector<uint8_t>(response.text.begin(), response.text.end());
+    std::vector<uint8_t> dresponse(eresponse.size());
+    size_t dresponse_len;
+    int response_code;
+    ohttp::DecapsulationErrorCode rv = ohttp::decapsulate_response(
+        &sender_context,
+        client_enc,
+        client_enc_len,
+        eresponse,
+        dresponse.data(),
+        &dresponse_len,
+        eresponse.size()
+    );
+    EXPECT_EQ(rv, ohttp::DecapsulationErrorCode::SUCCESS);
+    EXPECT_GT(dresponse_len, 0);
+    EXPECT_EQ(dresponse[0], 1); // Framing indicator
+    // BHTTP expects QUIC multi-byte integers, not a single uint8_t.
+    EXPECT_EQ(dresponse[1], 200); // Will fail when properly implemented
 }
 
 int main(int argc, char **argv) {
