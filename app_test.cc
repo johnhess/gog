@@ -68,6 +68,7 @@ TEST(CrowAppTest, OhttpGatewayEndpoint_ReturnsNonEmptyResponseWith200Status) {
     );
     EXPECT_EQ(response.status_code, 200); // GATEWAY's response, not the target's
     EXPECT_FALSE(response.text.empty());
+    EXPECT_EQ(response.header["content-type"], "application/ohttp-res");
 
     // Decapsulate the response
     std::vector<uint8_t> eresponse = std::vector<uint8_t>(response.text.begin(), response.text.end());

@@ -83,7 +83,12 @@ crow::SimpleApp& initialize_app(crow::SimpleApp& app, EVP_HPKE_KEY *keypair) {
             /* response_body */ response.text
         );
 
-        return crow::response{std::string(encapsulated_response.begin(), encapsulated_response.end())};
+        crow::response resp = crow::response{
+            std::string(encapsulated_response.begin(),
+            encapsulated_response.end())
+        };
+        resp.set_header("content-type", "application/ohttp-res");
+        return resp;
     });
 
     return app;
