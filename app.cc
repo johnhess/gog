@@ -32,6 +32,15 @@ crow::SimpleApp& initialize_app(crow::SimpleApp& app, EVP_HPKE_KEY *keypair) {
     // Generate config once, since it will be requested many times.
     std::vector<uint8_t> config = ohttp::generate_key_config(keypair);
     std::string config_str = std::string(config.begin(), config.end());
+    std::vector<uint8_t> pubk = ohttp::get_public_key(config);
+
+    std::cout << "Public Key: " << std::endl;
+    std::cout << "{";
+    for (size_t i = 0; i < pubk.size(); i++) {
+        std::cout << "0x" << std::hex << std::setfill('0') << std::setw(2) << (int)pubk[i] << ", ";
+    }
+    std::cout << "}";
+    std::cout << std::endl;
 
     CROW_ROUTE(app, "/")([](){
         return "This is an OHTTP Gateway.  You can get ohttp-keys at /ohttp-keys; You can send requests to /ohttp-request";
