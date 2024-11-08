@@ -54,7 +54,7 @@ TEST(CrowAppTest, OhttpGatewayEndpoint_ReturnsNonEmptyResponseWith200Status) {
     uint8_t client_enc[ohttp::OHTTP_HPKE_MAX_ENC_LENGTH];
     size_t client_enc_len;
     std::vector<uint8_t> erequest = ohttp::get_encapsulated_request(
-        sender_context,
+         ,
         // Use information endpoint for our test to keep it self contained.
         "GET", "https", "httpbin.org", "/status/200", "",
         client_enc, &client_enc_len,
@@ -68,7 +68,7 @@ TEST(CrowAppTest, OhttpGatewayEndpoint_ReturnsNonEmptyResponseWith200Status) {
     );
     EXPECT_EQ(response.status_code, 200); // GATEWAY's response, not the target's
     EXPECT_FALSE(response.text.empty());
-    EXPECT_EQ(response.header["content-type"], "application/ohttp-res");
+    EXPECT_EQ(response.header["content-type"], "message/ohttp-res");
 
     // Decapsulate the response
     std::vector<uint8_t> eresponse = std::vector<uint8_t>(response.text.begin(), response.text.end());
