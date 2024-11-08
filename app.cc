@@ -6,10 +6,10 @@
 #include "app.h"
 
 // TODO: Deal with persisted keys via config.
-ohttp::HPKE_KEY* getKeys() {
-  ohttp::HPKE_KEY *keypair = ohttp::createHpkeKey();
-  const ohttp::HPKE_KEM *kem = ohttp::createHpkeKem();
-  int rv = ohttp::HPKE_KEY_generate(keypair, kem);
+ohttp::OHTTP_HPKE_KEY* getKeys() {
+  ohttp::OHTTP_HPKE_KEY *keypair = ohttp::createHpkeKey();
+  const ohttp::OHTTP_HPKE_KEM *kem = ohttp::createHpkeKem();
+  int rv = ohttp::OHTTP_HPKE_KEY_generate(keypair, kem);
   assert(rv == 1);
   return keypair;
 }
@@ -28,7 +28,7 @@ cpr::Response do_binary_request(std::vector<uint8_t> binary_request) {
     }
 }
 
-crow::SimpleApp& initialize_app(crow::SimpleApp& app, ohttp::HPKE_KEY *keypair) {
+crow::SimpleApp& initialize_app(crow::SimpleApp& app, ohttp::OHTTP_HPKE_KEY *keypair) {
     // Generate config once, since it will be requested many times.
     std::vector<uint8_t> config = ohttp::generate_key_config(keypair);
     std::string config_str = std::string(config.begin(), config.end());
@@ -52,7 +52,7 @@ crow::SimpleApp& initialize_app(crow::SimpleApp& app, ohttp::HPKE_KEY *keypair) 
 
     // POSTs to the gateway
     CROW_ROUTE(app, "/gateway").methods(crow::HTTPMethod::POST)([keypair](const crow::request& req){
-        ohttp::HPKE_CTX* receiver_context = ohttp::createHpkeContext();
+        ohttp::OHTTP_HPKE_CTX* receiver_context = ohttp::createHpkeContext();
         std::string body = req.body;
         std::vector<uint8_t> body_as_vec = std::vector<uint8_t>(body.begin(), body.end());
         uint8_t decapsulated_request[body.size()];
@@ -95,7 +95,7 @@ crow::SimpleApp& initialize_app(crow::SimpleApp& app, ohttp::HPKE_KEY *keypair) 
 }
 
 int main() {
-    ohttp::HPKE_KEY* keypair = getKeys();
+    ohttp::OHTTP_HPKE_KEY* keypair = getKeys();
     crow::SimpleApp app;
     initialize_app(app, keypair);
     app.port(8081).run();

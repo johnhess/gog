@@ -13,7 +13,7 @@ public:
     // One-time setup
     void SetUp() override {
         server_thread = std::thread([]() {
-            ohttp::HPKE_KEY* keypair = getKeys();
+            ohttp::OHTTP_HPKE_KEY* keypair = getKeys();
             crow::SimpleApp app;
             initialize_app(app, keypair);
             app.port(8081).run();
@@ -50,8 +50,8 @@ TEST(CrowAppTest, OhttpGatewayEndpoint_ReturnsNonEmptyResponseWith200Status) {
     std::vector<uint8_t> pk = ohttp::get_public_key(std::vector<uint8_t>(config_resp.text.begin(), config_resp.text.end()));
 
     // Encapsulate that request
-    ohttp::HPKE_CTX* sender_context = ohttp::createHpkeContext();
-    uint8_t client_enc[ohttp::HPKE_MAX_ENC_LENGTH];
+    ohttp::OHTTP_HPKE_CTX* sender_context = ohttp::createHpkeContext();
+    uint8_t client_enc[ohttp::OHTTP_HPKE_MAX_ENC_LENGTH];
     size_t client_enc_len;
     std::vector<uint8_t> erequest = ohttp::get_encapsulated_request(
         sender_context,

@@ -3,7 +3,7 @@
 
 #include "crow.h"
 
-ohttp::HPKE_KEY* getKeys();
-crow::SimpleApp& initialize_app(crow::SimpleApp& app, ohttp::HPKE_KEY *keypair);
+ohttp::OHTTP_HPKE_KEY* getKeys();
+crow::SimpleApp& initialize_app(crow::SimpleApp& app, ohttp::OHTTP_HPKE_KEY *keypair);
 
 #endif // APP_H
