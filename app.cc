@@ -6,10 +6,10 @@
 #include "app.h"
 
 // TODO: Deal with persisted keys via config.
-EVP_HPKE_KEY* getKeys() {
-  EVP_HPKE_KEY *keypair = EVP_HPKE_KEY_new();
-  const EVP_HPKE_KEM *kem = EVP_hpke_x25519_hkdf_sha256();
-  int rv = EVP_HPKE_KEY_generate(keypair, kem);
+ohttp::HPKE_KEY* getKeys() {
+  ohttp::HPKE_KEY *keypair = ohttp::createHpkeKey();
+  const ohttp::HPKE_KEM *kem = ohttp::createHpkeKem();
+  int rv = ohttp::HPKE_KEY_generate(keypair, kem);
   assert(rv == 1);
   return keypair;
 }
@@ -28,7 +28,7 @@ cpr::Response do_binary_request(std::vector<uint8_t> binary_request) {
     }
 }
 
-crow::SimpleApp& initialize_app(crow::SimpleApp& app, EVP_HPKE_KEY *keypair) {
+crow::SimpleApp& initialize_app(crow::SimpleApp& app, ohttp::HPKE_KEY *keypair) {
     // Generate config once, since it will be requested many times.
     std::vector<uint8_t> config = ohttp::generate_key_config(keypair);
     std::string config_str = std::string(config.begin(), config.end());
@@ -52,7 +52,7 @@ crow::SimpleApp& initialize_app(crow::SimpleApp& app, EVP_HPKE_KEY *keypair) {
 
     // POSTs to the gateway
     CROW_ROUTE(app, "/gateway").methods(crow::HTTPMethod::POST)([keypair](const crow::request& req){
-        EVP_HPKE_CTX receiver_context;
+        ohttp::HPKE_CTX* receiver_context = ohttp::createHpkeContext();
         std::string body = req.body;
         std::vector<uint8_t> body_as_vec = std::vector<uint8_t>(body.begin(), body.end());
         uint8_t decapsulated_request[body.size()];
@@ -60,14 +60,14 @@ crow::SimpleApp& initialize_app(crow::SimpleApp& app, EVP_HPKE_KEY *keypair) {
         size_t enc_len = 32;
         uint8_t enc[enc_len];
         ohttp::DecapsulationErrorCode result = ohttp::decapsulate_request(
-            /* receiver_context */ &receiver_context,
+            /* receiver_context */ receiver_context,
             /* erequest */ body_as_vec,
             /* drequest */ decapsulated_request,
             /* drequest_len */ &out_len,
             /* enc */ enc,
             /* enc_len */ enc_len,
             /* max_drequest_len */ body.size(),
-            /* recipient_keypair */ *keypair
+            /* recipient_keypair */ keypair
         );
         if (result != ohttp::DecapsulationErrorCode::SUCCESS) {
             return crow::response{500, DecapsulationErrorCodeToString(result)};
@@ -76,7 +76,7 @@ crow::SimpleApp& initialize_app(crow::SimpleApp& app, EVP_HPKE_KEY *keypair) {
 
         // Encapsulate response
         std::vector<uint8_t> encapsulated_response = ohttp::encapsulate_response(
-            /* receiver_context */ &receiver_context,
+            /* receiver_context */ receiver_context,
             /* enc */ enc,
             /* enc_len */ enc_len,
             /* response_code */ (int)response.status_code,
@@ -95,7 +95,7 @@ crow::SimpleApp& initialize_app(crow::SimpleApp& app, EVP_HPKE_KEY *keypair) {
 }
 
 int main() {
-    EVP_HPKE_KEY* keypair = getKeys();
+    ohttp::HPKE_KEY* keypair = getKeys();
     crow::SimpleApp app;
     initialize_app(app, keypair);
     app.port(8081).run();

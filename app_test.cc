@@ -13,7 +13,7 @@ public:
     // One-time setup
     void SetUp() override {
         server_thread = std::thread([]() {
-            EVP_HPKE_KEY* keypair = getKeys();
+            ohttp::HPKE_KEY* keypair = getKeys();
             crow::SimpleApp app;
             initialize_app(app, keypair);
             app.port(8081).run();
@@ -50,11 +50,11 @@ TEST(CrowAppTest, OhttpGatewayEndpoint_ReturnsNonEmptyResponseWith200Status) {
     std::vector<uint8_t> pk = ohttp::get_public_key(std::vector<uint8_t>(config_resp.text.begin(), config_resp.text.end()));
 
     // Encapsulate that request
-    EVP_HPKE_CTX sender_context;
-    uint8_t client_enc[EVP_HPKE_MAX_ENC_LENGTH];
+    ohttp::HPKE_CTX* sender_context = ohttp::createHpkeContext();
+    uint8_t client_enc[ohttp::HPKE_MAX_ENC_LENGTH];
     size_t client_enc_len;
     std::vector<uint8_t> erequest = ohttp::get_encapsulated_request(
-        &sender_context,
+        sender_context,
         // Use information endpoint for our test to keep it self contained.
         "GET", "https", "httpbin.org", "/status/200", "",
         client_enc, &client_enc_len,
@@ -76,7 +76,7 @@ TEST(CrowAppTest, OhttpGatewayEndpoint_ReturnsNonEmptyResponseWith200Status) {
     size_t dresponse_len;
     int response_code;
     ohttp::DecapsulationErrorCode rv = ohttp::decapsulate_response(
-        &sender_context,
+        sender_context,
         client_enc,
         client_enc_len,
         eresponse,
