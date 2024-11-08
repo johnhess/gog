@@ -87,7 +87,7 @@ crow::SimpleApp& initialize_app(crow::SimpleApp& app, ohttp::OHTTP_HPKE_KEY *key
             std::string(encapsulated_response.begin(),
             encapsulated_response.end())
         };
-        resp.set_header("content-type", "application/ohttp-res");
+        resp.set_header("content-type", "message/ohttp-res");
         return resp;
     });
 
