@@ -97,6 +97,7 @@ crow::SimpleApp& initialize_app(crow::SimpleApp& app, ohttp::OHTTP_HPKE_KEY *key
 int main() {
     ohttp::OHTTP_HPKE_KEY* keypair = getKeys();
     crow::SimpleApp app;
+    app.concurrency(10);
     initialize_app(app, keypair);
     app.port(8081).run();
 }
