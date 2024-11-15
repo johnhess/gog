@@ -43,7 +43,7 @@ crow::SimpleApp& initialize_app(crow::SimpleApp& app, ohttp::OHTTP_HPKE_KEY *key
     std::cout << std::endl;
 
     CROW_ROUTE(app, "/")([](){
-        return "This is an OHTTP Gateway.  You can get ohttp-keys at /ohttp-keys; You can send requests to /ohttp-request";
+        return "This is an OHTTP Gateway.  You can get ohttp-keys at ./ohttp-keys; You can send requests to ./gateway";
     });
 
     CROW_ROUTE(app, "/ohttp-keys")([config_str](){
