@@ -2,7 +2,7 @@
 
 This application provides an OHTTP gateway per [RFC 9458](https://www.rfc-editor.org/rfc/rfc9458.html).  This can stand alone or run on the same server as the OHTTP Target Resource.
 
-`gog` is a [Crow](https://crowcpp.org/) app that uses `ohttp-gp` for heavy lifting.  It forwards requests to a pre-configured target resource and makes keys available to clients at `/ohttp-keys`. 
+`gog` is a [Crow](https://crowcpp.org/) app that uses []`ohttp-gp`](https://github.com/johnhess/ohttp-gp?tab=readme-ov-file) for heavy lifting.  It forwards requests to a pre-configured target resource and makes keys available to clients at `/ohttp-keys`. 
 
 ## Building
 
