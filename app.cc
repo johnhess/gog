@@ -55,6 +55,13 @@ crow::SimpleApp& initialize_app(crow::SimpleApp& app, ohttp::OHTTP_HPKE_KEY *key
         ohttp::OHTTP_HPKE_CTX* receiver_context = ohttp::createHpkeContext();
         std::string body = req.body;
         std::vector<uint8_t> body_as_vec = std::vector<uint8_t>(body.begin(), body.end());
+        std::cout << "Received request: " << body << std::endl;
+        std::cout << "Received request as hex: " << std::endl;
+        for (size_t i = 0; i < body_as_vec.size(); i++) {
+            std::cout << "0x" << std::hex << std::setfill('0') << std::setw(2) << (int)body_as_vec[i] << ", ";
+        }
+        std::cout << std::endl;
+        
         uint8_t decapsulated_request[body.size()];
         size_t out_len;
         size_t enc_len = 32;
