@@ -29,7 +29,7 @@ FetchContent_MakeAvailable(googletest)
 FetchContent_Declare(
     ohttp_gp
     GIT_REPOSITORY https://github.com/johnhess/ohttp-gp.git
-    GIT_TAG origin/hide-boringssl-2
+    GIT_TAG origin/main
 )
 FetchContent_MakeAvailable(ohttp_gp)
 include_directories(${ohttp_gp_SOURCE_DIR})
